@@ -1,11 +1,10 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const morgan = require("morgan");
-
-const foodRoutes = require("./routes/food");
-const recipeRoutes = require("./routes/recipe");
+import "dotenv/config";
+import express, { Request, Response, NextFunction } from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import foodRoutes from "./routes/food";
+import recipeRoutes from "./routes/recipe";
 
 const app = express();
 
@@ -14,14 +13,21 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
 
-app.get("/health", (req, res) => {
+app.get("/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
 
 app.use("/api/foods", foodRoutes);
 app.use("/api/recipes", recipeRoutes);
 
-app.use((err, req, res, next) => {
+interface HttpError extends Error {
+  response?: {
+    status: number;
+    data: unknown;
+  };
+}
+
+app.use((err: HttpError, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err.message);
   const status = err.response?.status || 500;
   const data = err.response?.data || { error: err.message };
@@ -35,4 +41,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = app;
+export default app;

@@ -1,13 +1,14 @@
-const request = require("supertest");
-const axios = require("axios");
-const app = require("../src/index");
-const { resetTokenCache } = require("../src/services/fatsecret");
+import request from "supertest";
+import axios from "axios";
+import app from "../src/index";
+import { resetTokenCache } from "../src/services/fatsecret";
 
 jest.mock("axios");
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 function resetMocks() {
-  axios.post.mockReset();
-  axios.get.mockReset();
+  mockedAxios.post.mockReset();
+  mockedAxios.get.mockReset();
   resetTokenCache();
 }
 
@@ -25,8 +26,8 @@ describe("GET /api/foods/search", () => {
   });
 
   it("proxies search to FatSecret v5 with images", async () => {
-    axios.post.mockResolvedValueOnce(mockToken());
-    axios.post.mockResolvedValueOnce({
+    mockedAxios.post.mockResolvedValueOnce(mockToken());
+    mockedAxios.post.mockResolvedValueOnce({
       data: {
         foods_search: {
           max_results: "20",
@@ -42,18 +43,18 @@ describe("GET /api/foods/search", () => {
     expect(res.status).toBe(200);
     expect(res.body.foods_search.results.food[0].food_name).toBe("Chicken");
 
-    expect(axios.post.mock.calls[1][1]).toContain("method=foods.search.v5");
-    expect(axios.post.mock.calls[1][1]).toContain("include_food_images=true");
+    expect(mockedAxios.post.mock.calls[1][1]).toContain("method=foods.search.v5");
+    expect(mockedAxios.post.mock.calls[1][1]).toContain("include_food_images=true");
   });
 
   it("passes food_type filter when provided", async () => {
-    axios.post.mockResolvedValueOnce(mockToken());
-    axios.post.mockResolvedValueOnce({ data: { foods_search: {} } });
+    mockedAxios.post.mockResolvedValueOnce(mockToken());
+    mockedAxios.post.mockResolvedValueOnce({ data: { foods_search: {} } });
 
     await request(app).get("/api/foods/search?q=chicken&food_type=brand");
 
-    expect(axios.post).toHaveBeenCalledTimes(2);
-    expect(axios.post.mock.calls[1][1]).toContain("food_type=brand");
+    expect(mockedAxios.post).toHaveBeenCalledTimes(2);
+    expect(mockedAxios.post.mock.calls[1][1]).toContain("food_type=brand");
   });
 });
 
@@ -61,8 +62,8 @@ describe("GET /api/foods/barcode/:barcode", () => {
   beforeEach(resetMocks);
 
   it("proxies barcode lookup to FatSecret v2", async () => {
-    axios.post.mockResolvedValueOnce(mockToken());
-    axios.get.mockResolvedValueOnce({
+    mockedAxios.post.mockResolvedValueOnce(mockToken());
+    mockedAxios.get.mockResolvedValueOnce({
       data: {
         food: {
           food_id: "50953",
@@ -77,8 +78,8 @@ describe("GET /api/foods/barcode/:barcode", () => {
     expect(res.status).toBe(200);
     expect(res.body.food.food_name).toBe("Whole Grain Cheerios");
 
-    expect(axios.get.mock.calls[0][0]).toContain("/food/barcode/find-by-id/v2");
-    expect(axios.get.mock.calls[0][0]).toContain("include_food_images=true");
+    expect(mockedAxios.get.mock.calls[0][0]).toContain("/food/barcode/find-by-id/v2");
+    expect(mockedAxios.get.mock.calls[0][0]).toContain("include_food_images=true");
   });
 });
 
@@ -86,8 +87,8 @@ describe("GET /api/foods/:id", () => {
   beforeEach(resetMocks);
 
   it("proxies food get to FatSecret v5", async () => {
-    axios.post.mockResolvedValueOnce(mockToken());
-    axios.post.mockResolvedValueOnce({
+    mockedAxios.post.mockResolvedValueOnce(mockToken());
+    mockedAxios.post.mockResolvedValueOnce({
       data: { food: { food_id: "1641", food_name: "Chicken Breast" } },
     });
 
@@ -95,7 +96,7 @@ describe("GET /api/foods/:id", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.food.food_name).toBe("Chicken Breast");
-    expect(axios.post.mock.calls[1][1]).toContain("method=food.get.v5");
-    expect(axios.post.mock.calls[1][1]).toContain("food_id=1641");
+    expect(mockedAxios.post.mock.calls[1][1]).toContain("method=food.get.v5");
+    expect(mockedAxios.post.mock.calls[1][1]).toContain("food_id=1641");
   });
 });

@@ -1,12 +1,18 @@
-const axios = require("axios");
+import axios from "axios";
 
 const TOKEN_URL = "https://oauth.fatsecret.com/connect/token";
 const API_BASE = "https://platform.fatsecret.com/rest";
 
-let cachedToken = null;
+interface TokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
+let cachedToken: string | null = null;
 let tokenExpiry = 0;
 
-async function getAccessToken() {
+async function getAccessToken(): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
 
   if (cachedToken && now < tokenExpiry - 60) {
@@ -20,7 +26,7 @@ async function getAccessToken() {
     "base64"
   );
 
-  const response = await axios.post(
+  const response = await axios.post<TokenResponse>(
     TOKEN_URL,
     "grant_type=client_credentials",
     {
@@ -37,15 +43,20 @@ async function getAccessToken() {
   return cachedToken;
 }
 
-async function callFatSecret(method, params = {}) {
+async function callFatSecret<T = unknown>(
+  method: string,
+  params: Record<string, string | number | boolean> = {}
+): Promise<T> {
   const token = await getAccessToken();
 
-  const response = await axios.post(
+  const response = await axios.post<T>(
     `${API_BASE}/server.api`,
     new URLSearchParams({
       method,
       format: "json",
-      ...params,
+      ...Object.fromEntries(
+        Object.entries(params).map(([k, v]) => [k, String(v)])
+      ),
     }).toString(),
     {
       headers: {
@@ -58,12 +69,18 @@ async function callFatSecret(method, params = {}) {
   return response.data;
 }
 
-async function callFatSecretUrl(path, params = {}) {
+async function callFatSecretUrl<T = unknown>(
+  path: string,
+  params: Record<string, string | number | boolean> = {}
+): Promise<T> {
   const token = await getAccessToken();
 
-  const query = new URLSearchParams({ format: "json", ...params }).toString();
+  const searchParams = new URLSearchParams({ format: "json" });
+  for (const [key, value] of Object.entries(params)) {
+    searchParams.append(key, String(value));
+  }
 
-  const response = await axios.get(`${API_BASE}${path}?${query}`, {
+  const response = await axios.get<T>(`${API_BASE}${path}?${searchParams}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -72,9 +89,9 @@ async function callFatSecretUrl(path, params = {}) {
   return response.data;
 }
 
-function resetTokenCache() {
+function resetTokenCache(): void {
   cachedToken = null;
   tokenExpiry = 0;
 }
 
-module.exports = { getAccessToken, callFatSecret, callFatSecretUrl, resetTokenCache };
+export { getAccessToken, callFatSecret, callFatSecretUrl, resetTokenCache };

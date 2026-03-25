@@ -1,12 +1,13 @@
-const request = require("supertest");
-const axios = require("axios");
-const app = require("../src/index");
-const { resetTokenCache } = require("../src/services/fatsecret");
+import request from "supertest";
+import axios from "axios";
+import app from "../src/index";
+import { resetTokenCache } from "../src/services/fatsecret";
 
 jest.mock("axios");
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 function resetMocks() {
-  axios.post.mockReset();
+  mockedAxios.post.mockReset();
   resetTokenCache();
 }
 
@@ -24,8 +25,8 @@ describe("GET /api/recipes/search", () => {
   });
 
   it("proxies search to FatSecret", async () => {
-    axios.post.mockResolvedValueOnce(mockToken());
-    axios.post.mockResolvedValueOnce({
+    mockedAxios.post.mockResolvedValueOnce(mockToken());
+    mockedAxios.post.mockResolvedValueOnce({
       data: {
         recipes_search: {
           max_results: "20",
@@ -45,8 +46,8 @@ describe("GET /api/recipes/search", () => {
       "Pasta Carbonara"
     );
 
-    expect(axios.post.mock.calls[1][1]).toContain("method=recipes.search");
-    expect(axios.post.mock.calls[1][1]).toContain("search_expression=pasta");
+    expect(mockedAxios.post.mock.calls[1][1]).toContain("method=recipes.search");
+    expect(mockedAxios.post.mock.calls[1][1]).toContain("search_expression=pasta");
   });
 });
 
@@ -54,8 +55,8 @@ describe("GET /api/recipes/:id", () => {
   beforeEach(resetMocks);
 
   it("proxies recipe get to FatSecret", async () => {
-    axios.post.mockResolvedValueOnce(mockToken());
-    axios.post.mockResolvedValueOnce({
+    mockedAxios.post.mockResolvedValueOnce(mockToken());
+    mockedAxios.post.mockResolvedValueOnce({
       data: { recipe: { recipe_id: "456", recipe_name: "Pasta Carbonara" } },
     });
 
@@ -63,7 +64,7 @@ describe("GET /api/recipes/:id", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.recipe.recipe_name).toBe("Pasta Carbonara");
-    expect(axios.post.mock.calls[1][1]).toContain("method=recipe.get.v2");
-    expect(axios.post.mock.calls[1][1]).toContain("recipe_id=456");
+    expect(mockedAxios.post.mock.calls[1][1]).toContain("method=recipe.get.v2");
+    expect(mockedAxios.post.mock.calls[1][1]).toContain("recipe_id=456");
   });
 });
