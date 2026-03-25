@@ -72,4 +72,9 @@ async function callFatSecretUrl(path, params = {}) {
   return response.data;
 }
 
-module.exports = { getAccessToken, callFatSecret, callFatSecretUrl };
+function resetTokenCache() {
+  cachedToken = null;
+  tokenExpiry = 0;
+}
+
+module.exports = { getAccessToken, callFatSecret, callFatSecretUrl, resetTokenCache };

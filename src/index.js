@@ -8,7 +8,6 @@ const foodRoutes = require("./routes/food");
 const recipeRoutes = require("./routes/recipe");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(helmet());
 app.use(cors());
@@ -29,6 +28,11 @@ app.use((err, req, res, next) => {
   res.status(status).json(data);
 });
 
-app.listen(PORT, () => {
-  console.log(`FatSecret proxy running on port ${PORT}`);
-});
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`FatSecret proxy running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
