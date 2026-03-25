@@ -35,8 +35,8 @@ app.use((err: HttpError, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 if (require.main === module) {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
+  const PORT = Number(process.env.PORT) || 3000;
+  app.listen(PORT, "0.0.0.0", () => {
     console.log(`FatSecret proxy running on port ${PORT}`);
   });
 }
