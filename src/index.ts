@@ -5,6 +5,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import foodRoutes from "./routes/food";
 import recipeRoutes from "./routes/recipe";
+import openfoodfactsRoutes from "./routes/openfoodfacts";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get("/health", (_req: Request, res: Response) => {
 
 app.use("/api/foods", foodRoutes);
 app.use("/api/recipes", recipeRoutes);
+app.use("/api/openfoodfacts", openfoodfactsRoutes);
 
 interface HttpError extends Error {
   response?: {
