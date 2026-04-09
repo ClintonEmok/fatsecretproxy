@@ -89,6 +89,37 @@ describe("GET /api/openfoodfacts/search", () => {
 
     expect(mockSearchProducts).toHaveBeenCalledWith("apple", 100, 0);
   });
+
+  it("handles queries with hyphens without SQL errors", async () => {
+    mockSearchProducts.mockReturnValue({
+      count: 1,
+      page: 1,
+      page_size: 10,
+      products: [
+        {
+          code: "0895835001029",
+          product_name: "Siete Grain-Free Tortilla Chips",
+          generic_name: "",
+          brands: "Siete",
+          categories: "",
+          countries: "United States",
+          image_url: "",
+          image_front_url: "",
+          image_front_small_url: "",
+          image_nutrition_url: "",
+          image_ingredients_url: "",
+          ingredients_text: "",
+          nutri_score: "unknown",
+          nova_group: "unknown",
+        },
+      ],
+    });
+
+    const res = await request(app).get("/api/openfoodfacts/search?q=Siete%20Grain-Free%20Tortilla%20Chips");
+
+    expect(res.status).toBe(200);
+    expect(mockSearchProducts).toHaveBeenCalledWith("Siete Grain-Free Tortilla Chips", 20, 0);
+  });
 });
 
 describe("GET /api/openfoodfacts/barcode/:code", () => {

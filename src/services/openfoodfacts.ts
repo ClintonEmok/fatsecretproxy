@@ -47,12 +47,21 @@ export interface OFFProductResponse {
   status_verbose: string;
 }
 
+function sanitizeFtsQuery(query: string): string {
+  return query
+    .replace(/-/g, " ")
+    .replace(/[+"*:/^()%~]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function searchProducts(
   query: string,
   limit = 20,
   offset = 0
 ): OFFSearchResult {
   const d = getDb();
+  const sanitized = sanitizeFtsQuery(query);
 
   const products = d
     .prepare(
@@ -68,7 +77,7 @@ export function searchProducts(
     LIMIT ? OFFSET ?
   `
     )
-    .all(query, limit, offset) as OFFProduct[];
+    .all(sanitized, limit, offset) as OFFProduct[];
 
   const totalRow = d
     .prepare(
@@ -79,7 +88,7 @@ export function searchProducts(
     WHERE products_fts MATCH ?
   `
     )
-    .get(query) as { cnt: number };
+    .get(sanitized) as { cnt: number };
 
   return {
     count: totalRow.cnt,

@@ -45,6 +45,7 @@ router.get("/:id", (async (req, res, next) => {
   try {
     const data = await callFatSecret("food.get.v5", {
       food_id: String(req.params.id),
+      include_food_images: true,
     });
     res.json(data);
   } catch (err) {
